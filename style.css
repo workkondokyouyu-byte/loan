@@ -1,0 +1,317 @@
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #1f2933;
+  --muted: #616e7c;
+  --border: #d9e2ec;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --bonus-row: #fff7e6;
+  --error: #c81e1e;
+  --head-bg: #eef2f7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161c;
+    --card: #1c222b;
+    --text: #e4e7eb;
+    --muted: #9aa5b1;
+    --border: #323f4b;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --bonus-row: #3a2f17;
+    --error: #f87171;
+    --head-bg: #252d38;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tab {
+  font: inherit;
+  font-weight: bold;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.mode-desc {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 0 0 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field > label,
+legend {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+input[type="number"],
+input[type="text"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 9em;
+}
+
+input.short {
+  width: 5em;
+}
+
+input.yen {
+  width: 11em;
+  text-align: right;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 6px 0 0;
+}
+
+.bonus-detail {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.sub-label {
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-grid label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.month-grid label:has(input:checked) {
+  border-color: var(--accent);
+  font-weight: bold;
+}
+
+.month-grid label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--error);
+  min-height: 1.2em;
+  margin: 0 0 12px;
+}
+
+.submit {
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  cursor: pointer;
+}
+
+.submit:hover {
+  background: var(--accent-hover);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+
+.summary div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.summary dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.summary dd {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.table-wrap {
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--head-bg);
+  text-align: center;
+}
+
+td.center {
+  text-align: center;
+}
+
+td.month-cell {
+  vertical-align: middle;
+}
+
+tr.bonus td:not(.month-cell) {
+  background: var(--bonus-row);
+}
+
+tr.has-bonus td {
+  border-bottom-style: dashed;
+}
+
+tr.has-bonus td.month-cell {
+  border-bottom-style: solid;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  .month-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

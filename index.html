@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ローンシミュレーション</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>ローンシミュレーション</h1>
+
+    <div class="tabs" role="tablist" aria-label="計算の種類">
+      <button type="button" class="tab" role="tab" data-tab="forward" aria-selected="true">返済額を計算</button>
+      <button type="button" class="tab" role="tab" data-tab="reverse" aria-selected="false">返済期間を計算</button>
+    </div>
+
+    <form id="loan-form" class="card tab-panel" role="tabpanel" novalidate>
+      <p class="mode-desc" data-mode="forward">借入金額と返済期間から、月々の返済額を計算します。</p>
+      <p class="mode-desc" data-mode="reverse" hidden>借入金額と月々の返済額から、返済にかかる期間（月数）を計算します。</p>
+
+      <div class="field">
+        <label for="amount">① 借入金額</label>
+        <div class="input-unit">
+          <input type="number" id="amount" min="1" step="1" value="3000" inputmode="numeric">
+          <span>万円</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rate">② 年利</label>
+        <div class="input-unit">
+          <input type="number" id="rate" min="0" max="20" step="0.001" value="1.5" inputmode="decimal">
+          <span>%</span>
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend>③ 返済方式</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="method" value="equal-payment" checked> 元利均等</label>
+          <label class="choice"><input type="radio" name="method" value="equal-principal"> 元金均等</label>
+        </div>
+        <p class="hint">元利均等：毎月の返済額が一定　／　元金均等：毎月の元金返済額が一定（返済額は徐々に減少）</p>
+        <p class="hint" data-mode="reverse" hidden>元金均等の場合は、入力した月々の返済額を「初回の返済額」として計算します。</p>
+      </fieldset>
+
+      <fieldset class="field" data-mode="forward">
+        <legend>④ 返済期間</legend>
+        <div class="input-row">
+          <div class="input-unit">
+            <input type="number" id="years" min="0" max="50" step="1" value="35" inputmode="numeric">
+            <span>年</span>
+          </div>
+          <div class="input-unit">
+            <input type="number" id="months" min="0" max="11" step="1" value="0" inputmode="numeric">
+            <span>ヶ月</span>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="field" data-mode="reverse" hidden>
+        <label for="monthly-payment">④ 月々の返済額</label>
+        <div class="input-unit">
+          <input type="text" id="monthly-payment" class="yen" value="100,000" inputmode="numeric" autocomplete="off">
+          <span>円</span>
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend>返済開始年月</legend>
+        <div class="input-row">
+          <div class="input-unit">
+            <input type="number" id="start-year" min="1900" max="2200" step="1" inputmode="numeric">
+            <span>年</span>
+          </div>
+          <div class="input-unit">
+            <input type="number" id="start-month" class="short" min="1" max="12" step="1" inputmode="numeric">
+            <span>月</span>
+          </div>
+        </div>
+        <p class="hint">ボーナス返済月を一覧に反映するために使用します。</p>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>⑤ ボーナス返済</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="bonus" value="no" checked> なし</label>
+          <label class="choice"><input type="radio" name="bonus" value="yes"> あり</label>
+        </div>
+
+        <div id="bonus-detail" class="bonus-detail" hidden>
+          <div class="field" data-mode="forward">
+            <label for="bonus-amount">借入金額のうちボーナス返済分</label>
+            <div class="input-unit">
+              <input type="text" id="bonus-amount" class="yen" value="5,000,000" inputmode="numeric" autocomplete="off">
+              <span>円</span>
+            </div>
+          </div>
+          <div class="field" data-mode="reverse" hidden>
+            <label for="bonus-payment">ボーナス1回あたりの返済額</label>
+            <div class="input-unit">
+              <input type="text" id="bonus-payment" class="yen" value="100,000" inputmode="numeric" autocomplete="off">
+              <span>円</span>
+            </div>
+            <p class="hint">ボーナス月に、月々の返済額へ上乗せして返済する金額です。</p>
+          </div>
+          <p class="sub-label">ボーナス返済月（年4回まで）</p>
+          <div id="bonus-months" class="month-grid"></div>
+        </div>
+      </fieldset>
+
+      <p id="error" class="error" role="alert"></p>
+      <button type="submit" class="submit">計算する</button>
+    </form>
+
+    <section id="result" class="card" hidden>
+      <h2>計算結果</h2>
+      <dl id="summary" class="summary"></dl>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>回数</th>
+              <th>返済年月</th>
+              <th>区分</th>
+              <th>返済額</th>
+              <th>うち元金</th>
+              <th>うち利息</th>
+              <th>借入残高</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-body"></tbody>
+        </table>
+      </div>
+      <p id="result-note" class="hint"></p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

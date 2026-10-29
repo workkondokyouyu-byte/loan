@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ローンシミュレーション</title>
+  <style>
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #1f2933;
+  --muted: #616e7c;
+  --border: #d9e2ec;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --bonus-row: #fff7e6;
+  --error: #c81e1e;
+  --head-bg: #eef2f7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161c;
+    --card: #1c222b;
+    --text: #e4e7eb;
+    --muted: #9aa5b1;
+    --border: #323f4b;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --bonus-row: #3a2f17;
+    --error: #f87171;
+    --head-bg: #252d38;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tab {
+  font: inherit;
+  font-weight: bold;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.mode-desc {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 0 0 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field > label,
+legend {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+input[type="number"],
+input[type="text"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 9em;
+}
+
+input.short {
+  width: 5em;
+}
+
+input.yen {
+  width: 11em;
+  text-align: right;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 6px 0 0;
+}
+
+.bonus-detail {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.sub-label {
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-grid label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.month-grid label:has(input:checked) {
+  border-color: var(--accent);
+  font-weight: bold;
+}
+
+.month-grid label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--error);
+  min-height: 1.2em;
+  margin: 0 0 12px;
+}
+
+.submit {
+  font: inherit;
+  font-weight: bold;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  cursor: pointer;
+}
+
+.submit:hover {
+  background: var(--accent-hover);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+
+.summary div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.summary dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.summary dd {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.table-wrap {
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--head-bg);
+  text-align: center;
+}
+
+td.center {
+  text-align: center;
+}
+
+td.month-cell {
+  vertical-align: middle;
+}
+
+tr.bonus td:not(.month-cell) {
+  background: var(--bonus-row);
+}
+
+tr.has-bonus td {
+  border-bottom-style: dashed;
+}
+
+tr.has-bonus td.month-cell {
+  border-bottom-style: solid;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  .month-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>ローンシミュレーション</h1>
+
+    <div class="tabs" role="tablist" aria-label="計算の種類">
+      <button type="button" class="tab" role="tab" data-tab="forward" aria-selected="true">返済額を計算</button>
+      <button type="button" class="tab" role="tab" data-tab="reverse" aria-selected="false">返済期間を計算</button>
+    </div>
+
+    <form id="loan-form" class="card tab-panel" role="tabpanel" novalidate>
+      <p class="mode-desc" data-mode="forward">借入金額と返済期間から、月々の返済額を計算します。</p>
+      <p class="mode-desc" data-mode="reverse" hidden>借入金額と月々の返済額から、返済にかかる期間（月数）を計算します。</p>
+
+      <div class="field">
+        <label for="amount">① 借入金額</label>
+        <div class="input-unit">
+          <input type="number" id="amount" min="1" step="1" value="3000" inputmode="numeric">
+          <span>万円</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rate">② 年利</label>
+        <div class="input-unit">
+          <input type="number" id="rate" min="0" max="20" step="0.001" value="1.5" inputmode="decimal">
+          <span>%</span>
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend>③ 返済方式</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="method" value="equal-payment" checked> 元利均等</label>
+          <label class="choice"><input type="radio" name="method" value="equal-principal"> 元金均等</label>
+        </div>
+        <p class="hint">元利均等：毎月の返済額が一定　／　元金均等：毎月の元金返済額が一定（返済額は徐々に減少）</p>
+        <p class="hint" data-mode="reverse" hidden>元金均等の場合は、入力した月々の返済額を「初回の返済額」として計算します。</p>
+      </fieldset>
+
+      <fieldset class="field" data-mode="forward">
+        <legend>④ 返済期間</legend>
+        <div class="input-row">
+          <div class="input-unit">
+            <input type="number" id="years" min="0" max="50" step="1" value="35" inputmode="numeric">
+            <span>年</span>
+          </div>
+          <div class="input-unit">
+            <input type="number" id="months" min="0" max="11" step="1" value="0" inputmode="numeric">
+            <span>ヶ月</span>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="field" data-mode="reverse" hidden>
+        <label for="monthly-payment">④ 月々の返済額</label>
+        <div class="input-unit">
+          <input type="text" id="monthly-payment" class="yen" value="100,000" inputmode="numeric" autocomplete="off">
+          <span>円</span>
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend>返済開始年月</legend>
+        <div class="input-row">
+          <div class="input-unit">
+            <input type="number" id="start-year" min="1900" max="2200" step="1" inputmode="numeric">
+            <span>年</span>
+          </div>
+          <div class="input-unit">
+            <input type="number" id="start-month" class="short" min="1" max="12" step="1" inputmode="numeric">
+            <span>月</span>
+          </div>
+        </div>
+        <p class="hint">ボーナス返済月を一覧に反映するために使用します。</p>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>⑤ ボーナス返済</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="bonus" value="no" checked> なし</label>
+          <label class="choice"><input type="radio" name="bonus" value="yes"> あり</label>
+        </div>
+
+        <div id="bonus-detail" class="bonus-detail" hidden>
+          <div class="field" data-mode="forward">
+            <label for="bonus-amount">借入金額のうちボーナス返済分</label>
+            <div class="input-unit">
+              <input type="text" id="bonus-amount" class="yen" value="5,000,000" inputmode="numeric" autocomplete="off">
+              <span>円</span>
+            </div>
+          </div>
+          <div class="field" data-mode="reverse" hidden>
+            <label for="bonus-payment">ボーナス1回あたりの返済額</label>
+            <div class="input-unit">
+              <input type="text" id="bonus-payment" class="yen" value="100,000" inputmode="numeric" autocomplete="off">
+              <span>円</span>
+            </div>
+            <p class="hint">ボーナス月に、月々の返済額へ上乗せして返済する金額です。</p>
+          </div>
+          <p class="sub-label">ボーナス返済月（年4回まで）</p>
+          <div id="bonus-months" class="month-grid"></div>
+        </div>
+      </fieldset>
+
+      <p id="error" class="error" role="alert"></p>
+      <button type="submit" class="submit">計算する</button>
+    </form>
+
+    <section id="result" class="card" hidden>
+      <h2>計算結果</h2>
+      <dl id="summary" class="summary"></dl>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>回数</th>
+              <th>返済年月</th>
+              <th>区分</th>
+              <th>返済額</th>
+              <th>うち元金</th>
+              <th>うち利息</th>
+              <th>借入残高</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-body"></tbody>
+        </table>
+      </div>
+      <p id="result-note" class="hint"></p>
+    </section>
+  </main>
+
+  <script>
+'use strict';
+
+const MAX_BONUS_MONTHS = 4;
+const MAX_TOTAL_MONTHS = 600;
+
+const form = document.getElementById('loan-form');
+const tabs = [...document.querySelectorAll('.tab')];
+const errorEl = document.getElementById('error');
+const bonusDetail = document.getElementById('bonus-detail');
+const bonusMonthsEl = document.getElementById('bonus-months');
+const startYearEl = document.getElementById('start-year');
+const startMonthEl = document.getElementById('start-month');
+const resultEl = document.getElementById('result');
+const summaryEl = document.getElementById('summary');
+const scheduleBody = document.getElementById('schedule-body');
+const resultNoteEl = document.getElementById('result-note');
+
+// 'forward'：返済期間から返済額を計算 ／ 'reverse'：返済額から返済期間を計算
+let mode = 'forward';
+
+const yen = (value) => `${Math.round(value).toLocaleString('ja-JP')}円`;
+
+// ---------- 画面の初期化 ----------
+
+function initForm() {
+  // 返済開始年月の初期値は翌月
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  startYearEl.value = next.getFullYear();
+
+  for (let m = 1; m <= 12; m++) {
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" value="${m}"> ${m}月`;
+    bonusMonthsEl.appendChild(label);
+  }
+  startMonthEl.value = next.getMonth() + 1;
+
+  // 一般的なボーナス月（6月・12月）を初期選択
+  bonusMonthsEl.querySelectorAll('input').forEach((cb) => {
+    cb.checked = cb.value === '6' || cb.value === '12';
+  });
+}
+
+function switchMode(nextMode) {
+  mode = nextMode;
+  tabs.forEach((tab) => {
+    tab.setAttribute('aria-selected', String(tab.dataset.tab === mode));
+  });
+  form.querySelectorAll('[data-mode]').forEach((el) => {
+    el.hidden = el.dataset.mode !== mode;
+  });
+  errorEl.textContent = '';
+  resultEl.hidden = true;
+}
+
+function updateBonusVisibility() {
+  const hasBonus = form.elements.bonus.value === 'yes';
+  bonusDetail.hidden = !hasBonus;
+}
+
+// 年4回を超えて選択できないよう、上限に達したら残りを無効化する
+function updateBonusMonthLimit() {
+  const boxes = [...bonusMonthsEl.querySelectorAll('input')];
+  const checkedCount = boxes.filter((cb) => cb.checked).length;
+  boxes.forEach((cb) => {
+    cb.disabled = !cb.checked && checkedCount >= MAX_BONUS_MONTHS;
+  });
+}
+
+// ---------- 入力値の取得と検証 ----------
+
+// 「5,000,000」「5000000円」などの入力を円単位の数値に変換する（不正な値は NaN）
+function parseYen(text) {
+  const normalized = text
+    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[,，、\s円]/g, '');
+  return /^\d+$/.test(normalized) ? Number(normalized) : NaN;
+}
+
+// 両方のタブで共通の入力項目
+function readCommonInputs() {
+  const amount = Number(document.getElementById('amount').value);
+  const rate = Number(document.getElementById('rate').value);
+  const startYear = Number(startYearEl.value);
+  const startMonth = Number(startMonthEl.value);
+  const method = form.elements.method.value;
+  const hasBonus = form.elements.bonus.value === 'yes';
+  const bonusMonths = hasBonus
+    ? [...bonusMonthsEl.querySelectorAll('input:checked')].map((cb) => Number(cb.value))
+    : [];
+
+  if (!(amount > 0)) throw new Error('借入金額を正しく入力してください。');
+  if (!(rate >= 0 && rate <= 20)) throw new Error('年利は0〜20%の範囲で入力してください。');
+  if (!Number.isInteger(startYear) || startYear < 1900 || startYear > 2200) {
+    throw new Error('返済開始年を正しく入力してください。');
+  }
+  if (!Number.isInteger(startMonth) || startMonth < 1 || startMonth > 12) {
+    throw new Error('返済開始月は1〜12の整数で入力してください。');
+  }
+  if (hasBonus && bonusMonths.length === 0) throw new Error('ボーナス返済月を1つ以上選択してください。');
+
+  return {
+    principal: Math.round(amount * 10000),
+    annualRate: rate,
+    method,
+    startYear,
+    startMonth,
+    hasBonus,
+    bonusMonths,
+  };
+}
+
+// 「返済額を計算」タブの入力項目
+function readForwardInputs() {
+  const common = readCommonInputs();
+  const years = Number(document.getElementById('years').value || 0);
+  const months = Number(document.getElementById('months').value || 0);
+  const bonusAmount = common.hasBonus ? parseYen(document.getElementById('bonus-amount').value) : 0;
+
+  if (!Number.isInteger(years) || !Number.isInteger(months) || years < 0 || months < 0 || months > 11) {
+    throw new Error('返済期間は「年」は0以上、「ヶ月」は0〜11の整数で入力してください。');
+  }
+  const totalMonths = years * 12 + months;
+  if (totalMonths < 1 || totalMonths > MAX_TOTAL_MONTHS) {
+    throw new Error('返済期間は1ヶ月〜50年の範囲で入力してください。');
+  }
+  if (common.hasBonus) {
+    if (!(bonusAmount > 0)) throw new Error('ボーナス返済分の金額を円単位の整数で入力してください。');
+    if (bonusAmount >= common.principal) throw new Error('ボーナス返済分は借入金額より小さくしてください。');
+  }
+
+  return { ...common, totalMonths, bonusPrincipal: bonusAmount };
+}
+
+// 「返済期間を計算」タブの入力項目
+function readReverseInputs() {
+  const common = readCommonInputs();
+  const monthlyPayment = parseYen(document.getElementById('monthly-payment').value);
+  const bonusPayment = common.hasBonus ? parseYen(document.getElementById('bonus-payment').value) : 0;
+
+  if (!(monthlyPayment > 0)) throw new Error('月々の返済額を円単位の整数で入力してください。');
+  if (common.hasBonus && !(bonusPayment > 0)) {
+    throw new Error('ボーナス1回あたりの返済額を円単位の整数で入力してください。');
+  }
+
+  return { ...common, monthlyPayment, bonusPayment };
+}
+
+// ---------- 返済スケジュールの計算 ----------
+
+// 返済開始年月から数えて i 回目（0始まり）の返済年月
+function paymentDate(startYear, startMonth, i) {
+  const index = startMonth - 1 + i;
+  return { year: startYear + Math.floor(index / 12), month: (index % 12) + 1 };
+}
+
+// 元利均等の毎回返済額（discountFactors は各返済時点の割引係数）
+function levelPayment(principal, discountFactors) {
+  const sum = discountFactors.reduce((a, b) => a + b, 0);
+  return Math.round(principal / sum);
+}
+
+// 返済期間から返済額を計算する（月々返済分とボーナス返済分を別々に管理）
+function simulate(input) {
+  const { principal, bonusPrincipal, annualRate, method, totalMonths, startYear, startMonth, bonusMonths } = input;
+  const r = annualRate / 100 / 12;
+  const isEqualPayment = method === 'equal-payment';
+
+  const dates = [];
+  for (let i = 0; i < totalMonths; i++) {
+    dates.push(paymentDate(startYear, startMonth, i));
+  }
+  const isBonusMonth = dates.map((d) => bonusPrincipal > 0 && bonusMonths.includes(d.month));
+  const bonusCount = isBonusMonth.filter(Boolean).length;
+  if (bonusPrincipal > 0 && bonusCount === 0) {
+    throw new Error('返済期間内に選択したボーナス月がありません。返済期間や開始年月を見直してください。');
+  }
+
+  // 通常返済分（毎月）
+  let regularBalance = principal - bonusPrincipal;
+  const monthlyFactors = dates.map((_, i) => Math.pow(1 + r, -(i + 1)));
+  const regularPayment = isEqualPayment ? levelPayment(regularBalance, monthlyFactors) : 0;
+  const regularPrincipalEach = Math.floor(regularBalance / totalMonths);
+
+  // ボーナス返済分
+  let bonusBalance = bonusPrincipal;
+  let bonusAccrued = 0; // 前回ボーナス返済以降に発生した未払利息
+  let bonusPaidCount = 0;
+  const bonusFactors = monthlyFactors.filter((_, i) => isBonusMonth[i]);
+  const bonusPayment = isEqualPayment && bonusCount > 0 ? levelPayment(bonusPrincipal, bonusFactors) : 0;
+  const bonusPrincipalEach = bonusCount > 0 ? Math.floor(bonusPrincipal / bonusCount) : 0;
+
+  const rows = [];
+  for (let i = 0; i < totalMonths; i++) {
+    const isLast = i === totalMonths - 1;
+
+    const regularInterest = Math.round(regularBalance * r);
+    let regularPrincipal;
+    if (isLast) {
+      regularPrincipal = regularBalance;
+    } else if (isEqualPayment) {
+      regularPrincipal = Math.min(regularPayment - regularInterest, regularBalance);
+    } else {
+      regularPrincipal = Math.min(regularPrincipalEach, regularBalance);
+    }
+    regularBalance -= regularPrincipal;
+
+    let bonusPrincipalPaid = 0;
+    let bonusInterestPaid = 0;
+    if (bonusBalance > 0) {
+      // 元利均等は未払利息にも利息が付く（月複利）、元金均等は元金にのみ利息が付く
+      const interestBase = isEqualPayment ? bonusBalance + bonusAccrued : bonusBalance;
+      bonusAccrued += Math.round(interestBase * r);
+
+      if (isBonusMonth[i]) {
+        bonusPaidCount++;
+        const isLastBonus = bonusPaidCount === bonusCount;
+        if (isEqualPayment) {
+          const total = isLastBonus ? bonusBalance + bonusAccrued : bonusPayment;
+          bonusInterestPaid = Math.min(bonusAccrued, total);
+          bonusPrincipalPaid = total - bonusInterestPaid;
+        } else {
+          bonusInterestPaid = bonusAccrued;
+          bonusPrincipalPaid = isLastBonus ? bonusBalance : bonusPrincipalEach;
+        }
+        bonusAccrued -= bonusInterestPaid;
+        bonusBalance -= bonusPrincipalPaid;
+      }
+    }
+
+    rows.push(makeRow(i, dates[i], {
+      regularPrincipal,
+      regularInterest,
+      bonusPrincipal: bonusPrincipalPaid,
+      bonusInterest: bonusInterestPaid,
+      balanceAfterRegular: regularBalance + bonusBalance + bonusPrincipalPaid,
+      balance: regularBalance + bonusBalance,
+    }));
+  }
+  return rows;
+}
+
+// 返済額から返済期間を計算する（残高を1本で管理し、完済するまで返済を続ける）
+// 利息は毎月の返済で支払い、ボーナス返済は全額を元金に充てる
+function simulateReverse(input) {
+  const { principal, annualRate, method, monthlyPayment, bonusPayment, startYear, startMonth, bonusMonths } = input;
+  const r = annualRate / 100 / 12;
+  const isEqualPayment = method === 'equal-payment';
+
+  const firstInterest = Math.round(principal * r);
+  if (monthlyPayment <= firstInterest) {
+    throw new Error(`月々の返済額が初回の利息（${yen(firstInterest)}）以下のため、返済が終わりません。月々の返済額を増やしてください。`);
+  }
+  // 元金均等では、初回の返済額から求めた元金返済額を毎月一定にする
+  const principalEach = monthlyPayment - firstInterest;
+
+  let balance = principal;
+  const rows = [];
+  for (let i = 0; balance > 0; i++) {
+    if (i >= MAX_TOTAL_MONTHS) {
+      throw new Error('返済期間が50年を超えます。月々の返済額やボーナス返済額を増やしてください。');
+    }
+    const date = paymentDate(startYear, startMonth, i);
+
+    const regularInterest = Math.round(balance * r);
+    const plannedPrincipal = isEqualPayment ? monthlyPayment - regularInterest : principalEach;
+    const regularPrincipal = Math.min(plannedPrincipal, balance);
+    balance -= regularPrincipal;
+    const balanceAfterRegular = balance;
+
+    const isBonusMonth = bonusPayment > 0 && bonusMonths.includes(date.month);
+    const bonusPrincipal = isBonusMonth ? Math.min(bonusPayment, balance) : 0;
+    balance -= bonusPrincipal;
+
+    rows.push(makeRow(i, date, {
+      regularPrincipal,
+      regularInterest,
+      bonusPrincipal,
+      bonusInterest: 0,
+      balanceAfterRegular,
+      balance,
+    }));
+  }
+  return rows;
+}
+
+function makeRow(i, date, parts) {
+  const regular = parts.regularPrincipal + parts.regularInterest;
+  const bonus = parts.bonusPrincipal + parts.bonusInterest;
+  return {
+    no: i + 1,
+    ...date,
+    ...parts,
+    isBonus: bonus > 0,
+    regular,
+    bonus,
+    total: regular + bonus,
+    principal: parts.regularPrincipal + parts.bonusPrincipal,
+    interest: parts.regularInterest + parts.bonusInterest,
+  };
+}
+
+// ---------- 結果の表示 ----------
+
+function formatTerm(totalMonths) {
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  if (years === 0) return `${months}ヶ月`;
+  return months === 0 ? `${years}年` : `${years}年${months}ヶ月`;
+}
+
+function renderSummary(rows, input) {
+  const totalPayment = rows.reduce((sum, row) => sum + row.total, 0);
+  const totalInterest = rows.reduce((sum, row) => sum + row.interest, 0);
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const firstBonus = rows.find((row) => row.isBonus);
+
+  const items = [];
+  if (mode === 'reverse') {
+    items.push(['返済期間', `${formatTerm(rows.length)}（${rows.length}回）`]);
+    items.push(['完済年月', `${last.year}年${last.month}月`]);
+  }
+  if (input.method === 'equal-payment') {
+    items.push(['毎月の返済額', yen(first.regular)]);
+    if (mode === 'reverse') items.push(['最終回の返済額', yen(last.total)]);
+  } else {
+    items.push(['毎月の返済額（初回）', yen(first.regular)]);
+    items.push(['毎月の返済額（最終回）', yen(last.regular)]);
+  }
+  if (firstBonus) {
+    items.push(['ボーナス月の加算額（初回）', yen(firstBonus.bonus)]);
+  }
+  if (mode === 'forward') items.push(['返済回数', `${rows.length}回`]);
+  items.push(['総返済額', yen(totalPayment)]);
+  items.push(['うち利息総額', yen(totalInterest)]);
+
+  summaryEl.innerHTML = items
+    .map(([term, value]) => `<div><dt>${term}</dt><dd>${value}</dd></div>`)
+    .join('');
+
+  const notes = ['※ 金額は1円未満を四捨五入しており、最終回で端数を調整しています。実際の返済額は金融機関の計算方法により異なります。'];
+  if (mode === 'reverse' && firstBonus) {
+    notes.push('※ 返済期間の計算では、利息は毎月の返済で支払い、ボーナス返済は全額を元金の返済に充てています。');
+  }
+  resultNoteEl.innerHTML = notes.join('<br>');
+}
+
+// ボーナス返済のある月は「月々」「ボーナス」の2行に分けて表示する
+function renderSchedule(rows) {
+  scheduleBody.innerHTML = rows
+    .map((row) => {
+      const hasBonus = row.bonus > 0;
+      const span = hasBonus ? ' rowspan="2"' : '';
+      const regularRow = `
+      <tr class="${hasBonus ? 'has-bonus' : ''}">
+        <td class="month-cell"${span}>${row.no}</td>
+        <td class="month-cell center"${span}>${row.year}年${row.month}月</td>
+        <td class="center">月々</td>
+        <td>${yen(row.regular)}</td>
+        <td>${yen(row.regularPrincipal)}</td>
+        <td>${yen(row.regularInterest)}</td>
+        <td>${yen(hasBonus ? row.balanceAfterRegular : row.balance)}</td>
+      </tr>`;
+      if (!hasBonus) return regularRow;
+      return `${regularRow}
+      <tr class="bonus">
+        <td class="center">ボーナス</td>
+        <td>${yen(row.bonus)}</td>
+        <td>${yen(row.bonusPrincipal)}</td>
+        <td>${yen(row.bonusInterest)}</td>
+        <td>${yen(row.balance)}</td>
+      </tr>`;
+    })
+    .join('');
+}
+
+// 円単位の入力欄は、入力後に3桁区切りで表示し直す
+document.querySelectorAll('input.yen').forEach((input) => {
+  input.addEventListener('blur', () => {
+    const value = parseYen(input.value);
+    if (!Number.isNaN(value)) input.value = value.toLocaleString('ja-JP');
+  });
+});
+
+// ---------- イベント ----------
+
+tabs.forEach((tab) => {
+  tab.addEventListener('click', () => switchMode(tab.dataset.tab));
+});
+
+form.addEventListener('change', (event) => {
+  if (event.target.name === 'bonus') updateBonusVisibility();
+  if (bonusMonthsEl.contains(event.target)) updateBonusMonthLimit();
+});
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  errorEl.textContent = '';
+  try {
+    const input = mode === 'forward' ? readForwardInputs() : readReverseInputs();
+    const rows = mode === 'forward' ? simulate(input) : simulateReverse(input);
+    renderSummary(rows, input);
+    renderSchedule(rows);
+    resultEl.hidden = false;
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    resultEl.hidden = true;
+    errorEl.textContent = error.message;
+  }
+});
+
+initForm();
+switchMode('forward');
+updateBonusVisibility();
+updateBonusMonthLimit();
+  </script>
+</body>
+</html>
